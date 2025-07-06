@@ -49,8 +49,7 @@ async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(N
         content = (await file.read()).decode('utf-8')
         report_data = parse_html_content(content)
         img_buffer = generate_report_image(report_data)
-        caption = "👇 لنسخ الصفقات 👇
-https://t.me/Kin99old/768"
+        caption = "👇 لنسخ الصفقات 👇\nhttps://t.me/Kin99old/768"
         send_telegram_photo(img_buffer, caption)
         return JSONResponse(content={"status": "✅ Report sent successfully"})
     except Exception as e:
