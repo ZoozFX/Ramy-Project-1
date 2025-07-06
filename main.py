@@ -14,8 +14,8 @@ logging.basicConfig(level=logging.INFO)
 
 # البيئة
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+CHAT_ID = os.environ.get('CHAT_ID')
 SECRET_KEY = os.environ.get('SECRET_KEY')
-CHAT_IDS = os.environ.get('CHAT_IDS', '').split(',')  # ⬅️ قائمة chat_ids مفصولة بفواصل
 
 # حفظ آخر رسالة
 last_data = {}
@@ -25,10 +25,13 @@ last_data = {}
 async def send_post(request: Request):
     global last_data
     data = await request.json()
+
     if data.get("secret") != SECRET_KEY:
         return {"status": "❌ Secret غير صحيح"}
+
     data["time"] = datetime.utcnow().isoformat()
     last_data = data
+
     return {"status": "✅ تم الاستلام بدون إرسال إلى Telegram"}
 
 # ✅ GET - جلب آخر رسالة
@@ -128,20 +131,12 @@ def generate_report_image(report_data):
     return buf
 
 def send_telegram_photo(image_buffer, caption=""):
-    for chat_id in CHAT_IDS:
-        try:
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-            files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
-            data = {'chat_id': chat_id.strip(), 'caption': caption}
-            requests.post(url, files=files, data=data, timeout=10)
-        except Exception as e:
-            logger.error(f"Failed to send to {chat_id}: {str(e)}")
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+    files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
+    data = {'chat_id': CHAT_ID, 'caption': caption}
+    requests.post(url, files=files, data=data, timeout=10)
 
 def send_telegram_message(text):
-    for chat_id in CHAT_IDS:
-        try:
-            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-            data = {'chat_id': chat_id.strip(), 'text': text, 'parse_mode': 'HTML'}
-            requests.post(url, data=data, timeout=5)
-        except Exception as e:
-            logger.error(f"Failed to send message to {chat_id}: {str(e)}")
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    data = {'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML'}
+    requests.post(url, data=data, timeout=5)
