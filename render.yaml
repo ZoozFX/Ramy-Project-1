@@ -2,13 +2,13 @@ services:
   - type: web
     name: kin99-report
     env: python
-    plan: starter  # أو free حسب ما تختار
+    plan: starter  # أو free لو مش عايز تشغيل دائم
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
     envVars:
       - key: TELEGRAM_TOKEN
-        value: 7570975386:AAG2Z2myM-w6fN00T7NugvraRPT5Rj9Yjso
+        sync: false
       - key: CHAT_ID
-        value: -1002799925948
+        sync: false
       - key: SECRET_KEY
-        value: 8D81Yqh4lJbUsqGWpD9zCl1jQubexk
+        sync: false
