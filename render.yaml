@@ -8,7 +8,7 @@ services:
     envVars:
       - key: TELEGRAM_TOKEN
         sync: false
-      - key: CHAT_ID
+      - key: CHAT_IDS
         sync: false
       - key: SECRET_KEY
         sync: false
