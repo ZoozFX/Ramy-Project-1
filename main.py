@@ -9,19 +9,19 @@ import re
 import requests
 
 app = FastAPI()
-
 logger = logging.getLogger("uvicorn")
 logging.basicConfig(level=logging.INFO)
 
-# بيئة التشغيل
+# --- متغيرات البيئة ---
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-CHAT_IDS = os.environ.get('CHAT_ID', '').split(',')  # يدعم أكثر من قناة
+CHAT_ID = os.environ.get('CHAT_ID')          # القناة الأولى
+CHAT_ID_2 = os.environ.get('CHAT_ID_2')      # القناة الثانية (الجديدة)
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# حفظ آخر رسالة
+# --- حفظ آخر رسالة ---
 last_data = {}
 
-# ✅ استقبال من TradingView
+# ✅ POST - استقبال من TradingView
 @app.post("/send")
 async def send_post(request: Request):
     global last_data
@@ -35,12 +35,12 @@ async def send_post(request: Request):
 
     return {"status": "✅ تم الاستلام بدون إرسال إلى Telegram"}
 
-# ✅ جلب آخر رسالة
+# ✅ GET - جلب آخر رسالة
 @app.get("/last")
 async def get_last_data():
     return last_data
 
-# ✅ رفع تقرير HTML وتحويله لصورة
+# ✅ POST - رفع تقرير HTML وتحويله لصورة
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(None)):
     if x_secret_key != SECRET_KEY:
@@ -58,11 +58,10 @@ async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(N
         send_telegram_message(f"⚠️ Report Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ✅ تحليل محتوى HTML
+# --- وظائف مساعدة ---
 def parse_html_content(html_content):
     clean_text = re.sub('<[^<]+?>', '', html_content)
     clean_text = ' '.join(clean_text.split())
-
     period = "1 hour"
     period_match = re.search(r'Daily Report (\d+) hours?', clean_text)
     if period_match:
@@ -73,12 +72,7 @@ def parse_html_content(html_content):
     for match in re.finditer(r'Order\s*#(\d+):\s*(BUY|SELL)\s+(\w+)\s*\|\s*Profit:\s*(-?[\d.]+)\s*pips', clean_text):
         pips = float(match.group(4))
         total_pips += pips
-        trades.append({
-            'order_id': match.group(1),
-            'type': match.group(2),
-            'symbol': match.group(3),
-            'profit_pips': pips
-        })
+        trades.append({'order_id': match.group(1), 'type': match.group(2), 'symbol': match.group(3), 'profit_pips': pips})
 
     winning_trades = int(re.search(r'Winning Trades:\s*(\d+)', clean_text).group(1))
     losing_trades = int(re.search(r'Losing Trades:\s*(\d+)', clean_text).group(1))
@@ -99,7 +93,6 @@ def parse_html_content(html_content):
         'trades': trades
     }
 
-# ✅ توليد صورة التقرير
 def generate_report_image(report_data):
     plt.figure(figsize=(12, 8))
     ax = plt.gca()
@@ -107,13 +100,13 @@ def generate_report_image(report_data):
     bg_color = '#1a1a2e'
     text_color = '#e6e6e6'
     accent_color = '#4cc9f0'
+
     fig = plt.gcf()
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
     plt.text(0.5, 0.95, "Kin99old_copytrading Report", fontsize=24, fontweight='bold',
              color=accent_color, fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
-
     plt.text(0.5, 0.5, "@kin99old", fontsize=120, color='#ffffff10',
              fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
              verticalalignment='center', rotation=30, transform=ax.transAxes)
@@ -148,17 +141,25 @@ def generate_report_image(report_data):
     plt.close()
     return buf
 
-# ✅ إرسال صورة إلى جميع القنوات
 def send_telegram_photo(image_buffer, caption=""):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-    for chat_id in CHAT_IDS:
-        data = {'chat_id': chat_id.strip(), 'caption': caption}
-        files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
-        requests.post(url, files=files, data=data, timeout=10)
+    files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
+    
+    # إرسال إلى القناة الأولى
+    data = {'chat_id': CHAT_ID, 'caption': caption}
+    requests.post(url, files=files, data=data, timeout=10)
+    
+    # إرسال إلى القناة الثانية
+    data = {'chat_id': CHAT_ID_2, 'caption': caption}
+    requests.post(url, files=files, data=data, timeout=10)
 
-# ✅ إرسال رسالة إلى جميع القنوات
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    for chat_id in CHAT_IDS:
-        data = {'chat_id': chat_id.strip(), 'text': text, 'parse_mode': 'HTML'}
-        requests.post(url, data=data, timeout=5)
+    
+    # إرسال إلى القناة الأولى
+    data = {'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML'}
+    requests.post(url, data=data, timeout=5)
+    
+    # إرسال إلى القناة الثانية
+    data = {'chat_id': CHAT_ID_2, 'text': text, 'parse_mode': 'HTML'}
+    requests.post(url, data=data, timeout=5)
