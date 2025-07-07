@@ -9,18 +9,19 @@ import re
 import requests
 
 app = FastAPI()
+
 logger = logging.getLogger("uvicorn")
 logging.basicConfig(level=logging.INFO)
 
-# البيئة
+# بيئة التشغيل
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-CHAT_ID = os.environ.get('CHAT_ID')
+CHAT_IDS = os.environ.get('CHAT_ID', '').split(',')  # يدعم أكثر من قناة
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # حفظ آخر رسالة
 last_data = {}
 
-# ✅ POST - استقبال من TradingView
+# ✅ استقبال من TradingView
 @app.post("/send")
 async def send_post(request: Request):
     global last_data
@@ -34,12 +35,12 @@ async def send_post(request: Request):
 
     return {"status": "✅ تم الاستلام بدون إرسال إلى Telegram"}
 
-# ✅ GET - جلب آخر رسالة
+# ✅ جلب آخر رسالة
 @app.get("/last")
 async def get_last_data():
     return last_data
 
-# ✅ POST - رفع تقرير HTML وتحويله لصورة
+# ✅ رفع تقرير HTML وتحويله لصورة
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(None)):
     if x_secret_key != SECRET_KEY:
@@ -57,27 +58,37 @@ async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(N
         send_telegram_message(f"⚠️ Report Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ✅ وظائف مساعدة
+# ✅ تحليل محتوى HTML
 def parse_html_content(html_content):
     clean_text = re.sub('<[^<]+?>', '', html_content)
     clean_text = ' '.join(clean_text.split())
+
     period = "1 hour"
-    period_match = re.search(r'Daily Report \((\d+) hours?\)', clean_text)
+    period_match = re.search(r'Daily Report (\d+) hours?', clean_text)
     if period_match:
         period = f"{period_match.group(1)} hours"
+
     total_pips = 0.0
     trades = []
     for match in re.finditer(r'Order\s*#(\d+):\s*(BUY|SELL)\s+(\w+)\s*\|\s*Profit:\s*(-?[\d.]+)\s*pips', clean_text):
         pips = float(match.group(4))
         total_pips += pips
-        trades.append({'order_id': match.group(1), 'type': match.group(2), 'symbol': match.group(3), 'profit_pips': pips})
+        trades.append({
+            'order_id': match.group(1),
+            'type': match.group(2),
+            'symbol': match.group(3),
+            'profit_pips': pips
+        })
+
     winning_trades = int(re.search(r'Winning Trades:\s*(\d+)', clean_text).group(1))
     losing_trades = int(re.search(r'Losing Trades:\s*(\d+)', clean_text).group(1))
     total_trades = winning_trades + losing_trades
     win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+
     net_profit_match = re.search(r'Net Profit:\s*(-?[\d.]+)\s*pips', clean_text)
     if net_profit_match:
         total_pips = float(net_profit_match.group(1))
+
     return {
         'period': period,
         'winning_trades': winning_trades,
@@ -88,6 +99,7 @@ def parse_html_content(html_content):
         'trades': trades
     }
 
+# ✅ توليد صورة التقرير
 def generate_report_image(report_data):
     plt.figure(figsize=(12, 8))
     ax = plt.gca()
@@ -98,11 +110,14 @@ def generate_report_image(report_data):
     fig = plt.gcf()
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
+
     plt.text(0.5, 0.95, "Kin99old_copytrading Report", fontsize=24, fontweight='bold',
              color=accent_color, fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
+
     plt.text(0.5, 0.5, "@kin99old", fontsize=120, color='#ffffff10',
              fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
              verticalalignment='center', rotation=30, transform=ax.transAxes)
+
     content = [
         f"Reporting Period: {report_data['period']}",
         "",
@@ -116,27 +131,34 @@ def generate_report_image(report_data):
         f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "© Kin99old_copytrading Report"
     ]
+
     plt.text(0.1, 0.85, '\n'.join(content), fontsize=16, color=text_color,
              fontfamily='sans-serif', verticalalignment='top', linespacing=1.8)
+
     for x, y, text, size in [
         (0.8, 0.75, f"Net Profit: {report_data['net_pips']:+,.1f} pips", 20),
         (0.8, 0.7, f"Win Rate: {report_data['win_rate']:.1f}%", 20)
     ]:
         plt.text(x, y, text, fontsize=size, fontweight='bold', color=accent_color,
                  fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
+
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
     buf.seek(0)
     plt.close()
     return buf
 
+# ✅ إرسال صورة إلى جميع القنوات
 def send_telegram_photo(image_buffer, caption=""):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-    files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
-    data = {'chat_id': CHAT_ID, 'caption': caption}
-    requests.post(url, files=files, data=data, timeout=10)
+    for chat_id in CHAT_IDS:
+        data = {'chat_id': chat_id.strip(), 'caption': caption}
+        files = {'photo': ('report.png', image_buffer.getvalue(), 'image/png')}
+        requests.post(url, files=files, data=data, timeout=10)
 
+# ✅ إرسال رسالة إلى جميع القنوات
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    data = {'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML'}
-    requests.post(url, data=data, timeout=5)
+    for chat_id in CHAT_IDS:
+        data = {'chat_id': chat_id.strip(), 'text': text, 'parse_mode': 'HTML'}
+        requests.post(url, data=data, timeout=5)
