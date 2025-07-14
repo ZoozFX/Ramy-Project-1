@@ -114,6 +114,10 @@ def parse_html_content(html_content):
     }
 
 def generate_report_image(report_data):
+    import matplotlib.pyplot as plt
+    import io
+    from datetime import datetime
+
     plt.figure(figsize=(12, 8))
     ax = plt.gca()
     ax.axis('off')
@@ -157,33 +161,35 @@ def generate_report_image(report_data):
         plt.text(0.88, y, str(value), fontsize=16, color=text_color, fontweight='bold',
                  transform=ax.transAxes, ha='right', va='center')
 
-    # --- اللوجو في الزاوية (أسفل يسار مثلاً) ---
+    # --- علامة مائية باهتة في منتصف الصورة ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.05, 0.18, 0.03, 0.14], aspect='auto', alpha=1.0, zorder=2)
-    except Exception as e:
-        logger.warning(f"Logo corner error: {str(e)}")
-        plt.text(0.06, 0.05, "@YourBrand", fontsize=14, color='#cccccc', transform=ax.transAxes)
-
-    # --- علامة مائية أكبر في المنتصف بشفافية ---
-    try:
-        logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.1, zorder=0)
+        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.15, zorder=0)
     except Exception as e:
         logger.warning(f"Watermark fallback: {str(e)}")
-        plt.text(0.5, 0.4, "@YourBrand", fontsize=100, color='#ffffff10',
+        plt.text(0.5, 0.4, "@YourBrand", fontsize=100, color='#ffffff15',
                  ha='center', rotation=25, transform=ax.transAxes)
 
-    # --- تذييل التقرير ---
+    # --- لوجو واضح في الركن السفلي الأيسر ---
+    try:
+        logo_corner = plt.imread('logo.png')
+        ax.imshow(logo_corner, extent=[0.05, 0.18, 0.04, 0.14], aspect='auto', alpha=1.0, zorder=2)
+    except Exception as e:
+        logger.warning(f"Corner logo error: {str(e)}")
+        plt.text(0.06, 0.06, "@YourBrand", fontsize=14, color='#cccccc', transform=ax.transAxes)
+
+    # --- التذييل ---
     plt.text(0.5, 0.07, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
              fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
     plt.text(0.5, 0.03, "© YourBrand Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
 
+    # --- حفظ الصورة ---
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
     buf.seek(0)
     plt.close()
     return buf
+
 
 
 
