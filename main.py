@@ -134,9 +134,9 @@ def generate_report_image(report_data):
 
     # --- عنوان التقرير ---
     report_title = {
-        'Daily': "📊 Daily Trading Report",
-        'Weekly': "📊 Weekly Trading Report",
-        'Monthly': "📊 Monthly Trading Report"
+        'Daily': "📎 Daily Trading Report",
+        'Weekly': "📎 Weekly Trading Report",
+        'Monthly': "📎 Monthly Trading Report"
     }.get(report_data['period'], "📊 Trading Report")
 
     plt.text(0.5, 0.92, report_title, fontsize=26, fontweight='bold',
@@ -164,10 +164,10 @@ def generate_report_image(report_data):
     # --- علامة مائية باهتة في منتصف الصورة ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.15, zorder=0)
+        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.33, zorder=0)
     except Exception as e:
         logger.warning(f"Watermark fallback: {str(e)}")
-        plt.text(0.5, 0.4, "@YourBrand", fontsize=100, color='#ffffff15',
+        plt.text(0.5, 0.4, "@⚠️ Kin99old ⚠️", fontsize=100, color='#ffffff15',
                  ha='center', rotation=25, transform=ax.transAxes)
 
     # --- لوجو واضح في الركن السفلي الأيسر ---
@@ -176,12 +176,12 @@ def generate_report_image(report_data):
         ax.imshow(logo_corner, extent=[0.05, 0.18, 0.04, 0.14], aspect='auto', alpha=1.0, zorder=2)
     except Exception as e:
         logger.warning(f"Corner logo error: {str(e)}")
-        plt.text(0.06, 0.06, "@YourBrand", fontsize=14, color='#cccccc', transform=ax.transAxes)
+        plt.text(0.06, 0.06, "@⚠️ Kin99old ⚠️", fontsize=14, color='#cccccc', transform=ax.transAxes)
 
     # --- التذييل ---
     plt.text(0.5, 0.07, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
              fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
-    plt.text(0.5, 0.03, "© YourBrand Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
+    plt.text(0.5, 0.03, "© ⚠️ Kin99old ⚠️ Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
 
     # --- حفظ الصورة ---
     buf = io.BytesIO()
