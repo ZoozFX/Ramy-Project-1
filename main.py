@@ -180,7 +180,7 @@ def generate_report_image(report_data):
             logo_img = logo_img.resize((logo_width, logo_height))
             
             # وضع اللوجو في الركن الأيمن السفلي مع هامش 20 بكسل
-            logo_position_x = fig.bbox.xmax - logo_width - 20
+            logo_position_x = fig.bbox.xmax - logo_width - 39
             logo_position_y = 20  # هامش سفلي 20 بكسل
             
             # تحويل إحداثيات matplotlib إلى إحداثيات الشاشة
