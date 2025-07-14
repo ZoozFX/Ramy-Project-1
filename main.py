@@ -134,10 +134,10 @@ def generate_report_image(report_data):
 
     # --- عنوان التقرير ---
     report_title = {
-        'Daily': "📎 Daily Trading Report",
-        'Weekly': "📎 Weekly Trading Report",
-        'Monthly': "📎 Monthly Trading Report"
-    }.get(report_data['period'], "📊 Trading Report")
+        'Daily': "Daily Trading Report",
+        'Weekly': "Weekly Trading Report",
+        'Monthly': "Monthly Trading Report"
+    }.get(report_data['period'], "Trading Report")
 
     plt.text(0.5, 0.92, report_title, fontsize=26, fontweight='bold',
              color=accent_color, ha='center', fontfamily='sans-serif', transform=ax.transAxes)
