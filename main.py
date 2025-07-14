@@ -161,7 +161,7 @@ def generate_report_image(report_data):
     # --- شعار أو علامة مائية ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.4, 0.6, 0.3, 0.5], aspect='auto', alpha=0.22, zorder=10)
+        ax.imshow(logo, extent=[0.4, 0.6, 0.35, 0.45], aspect='auto', alpha=0.22, zorder=10)
     except Exception as e:
         logger.warning(f"Logo error: {str(e)}")
         plt.text(0.5, 0.32, "@kin99old", fontsize=80, color='#ffffff08', ha='center', rotation=25, transform=ax.transAxes)
