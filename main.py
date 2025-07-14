@@ -164,7 +164,7 @@ def generate_report_image(report_data):
     # --- علامة مائية باهتة في منتصف الصورة ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.33, zorder=0)
+        ax.imshow(logo, extent=[0.3, 0.4, 0.25, 0.55], aspect='auto', alpha=0.15, zorder=0)
     except Exception as e:
         logger.warning(f"Watermark fallback: {str(e)}")
         plt.text(0.5, 0.4, "@⚠️ Kin99old ⚠️", fontsize=100, color='#ffffff15',
