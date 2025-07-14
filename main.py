@@ -51,7 +51,7 @@ async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(N
         content = (await file.read()).decode('utf-8')
         report_data = parse_html_content(content)
         img_buffer = generate_report_image(report_data)
-        caption = "👇 لنسخ الصفقات 👇\nhttps://t.me/Kin99old/768"
+        caption = "👇 TO COPY TRADES 👇\nhttps://t.me/Kin99old/768"
         send_telegram_photo(img_buffer, caption)
         return JSONResponse(content={"status": "✅ Report sent successfully"})
     except Exception as e:
@@ -131,10 +131,10 @@ def generate_report_image(report_data):
 
     # --- عنوان التقرير ---
     report_title = {
-        'Daily': "📊 Daily Trading Report",
-        'Weekly': "📊 Weekly Trading Report",
-        'Monthly': "📊 Monthly Trading Report"
-    }.get(report_data['period'], "📊 Trading Report")
+        'Daily': "Daily Trading Report",
+        'Weekly': "Weekly Trading Report",
+        'Monthly': "Monthly Trading Report"
+    }.get(report_data['period'], "Trading Report")
 
     plt.text(0.5, 0.92, report_title, fontsize=26, fontweight='bold',
              color=accent_color, ha='center', fontfamily='sans-serif', transform=ax.transAxes)
@@ -161,15 +161,15 @@ def generate_report_image(report_data):
     # --- شعار أو علامة مائية ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.35, 0.65, 0.2, 0.45], aspect='auto', alpha=0.22, zorder=0)
+        ax.imshow(logo, extent=[0.35, 0.65, 0.2, 0.45], aspect='auto', alpha=0.22, zorder=10)
     except Exception as e:
         logger.warning(f"Logo error: {str(e)}")
-        plt.text(0.5, 0.32, "@YourBrand", fontsize=80, color='#ffffff08', ha='center', rotation=25, transform=ax.transAxes)
+        plt.text(0.5, 0.32, "@kin99old", fontsize=80, color='#ffffff08', ha='center', rotation=25, transform=ax.transAxes)
 
     # --- تذييل التقرير ---
     plt.text(0.5, 0.07, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
              fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
-    plt.text(0.5, 0.03, "© YourBrand Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
+    plt.text(0.5, 0.03, "© kin99old Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
 
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
