@@ -117,66 +117,65 @@ def generate_report_image(report_data):
     plt.figure(figsize=(12, 8))
     ax = plt.gca()
     ax.axis('off')
-    bg_color = '#1a1a2e'
-    text_color = '#e6e6e6'
-    accent_color = '#4cc9f0'
+
+    # إعداد الألوان
+    bg_color = '#111827'         # خلفية داكنة أكثر احترافية
+    text_color = '#F9FAFB'       # أبيض ناعم
+    accent_color = '#22D3EE'     # لون مميز للعنوانين
+    card_bg = '#1F2937'          # لون خلفية البطاقات
 
     fig = plt.gcf()
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
-    # عنوان التقرير
+    # --- عنوان التقرير ---
     report_title = {
-        'Daily': "Daily Trading Report",
-        'Weekly': "Weekly Trading Report",
-        'Monthly': "Monthly Trading Report"
-    }.get(report_data['period'], "Trading Report")
+        'Daily': "📊 Daily Trading Report",
+        'Weekly': "📊 Weekly Trading Report",
+        'Monthly': "📊 Monthly Trading Report"
+    }.get(report_data['period'], "📊 Trading Report")
 
-    plt.text(0.5, 0.95, report_title, fontsize=24, fontweight='bold',
-             color=accent_color, fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
+    plt.text(0.5, 0.92, report_title, fontsize=26, fontweight='bold',
+             color=accent_color, ha='center', fontfamily='sans-serif', transform=ax.transAxes)
 
-    # إضافة اللوجو بدلاً من العلامة المائية النصية
+    # --- بطاقة الإحصائيات (كروت) ---
+    stats = {
+        "Total Trades": report_data['total_trades'],
+        "Winning Trades": report_data['winning_trades'],
+        "Losing Trades": report_data['losing_trades'],
+        "Win Rate": f"{report_data['win_rate']:.1f}%",
+        "Net Profit": f"{report_data['net_pips']:+,.1f} pips"
+    }
+
+    y_start = 0.75
+    spacing = 0.12
+    for i, (label, value) in enumerate(stats.items()):
+        y = y_start - i * spacing
+        ax.add_patch(plt.Rectangle((0.1, y - 0.05), 0.8, 0.09, color=card_bg, transform=ax.transAxes, zorder=1))
+        plt.text(0.12, y, label, fontsize=14, color=accent_color, fontweight='bold',
+                 transform=ax.transAxes, ha='left', va='center')
+        plt.text(0.88, y, str(value), fontsize=16, color=text_color, fontweight='bold',
+                 transform=ax.transAxes, ha='right', va='center')
+
+    # --- شعار أو علامة مائية ---
     try:
-        logo = plt.imread('logo.png')  # تأكد من وجود الملف في نفس المجلد
-        logo_layer = plt.imshow(logo, aspect='auto', extent=[0.3, 0.7, 0.3, 0.7], alpha=0.1, zorder=0)
-        logo_layer.set_zorder(-1)  # إرسال اللوجو للخلفية
+        logo = plt.imread('logo.png')
+        ax.imshow(logo, extent=[0.35, 0.65, 0.2, 0.45], aspect='auto', alpha=0.08, zorder=0)
     except Exception as e:
-        logger.warning(f"Could not load logo: {str(e)}")
-        # Fallback إلى العلامة المائية النصية إذا فشل تحميل الصورة
-        plt.text(0.5, 0.5, "@YourLogo", fontsize=120, color='#ffffff10',
-                 fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
-                 verticalalignment='center', rotation=30, transform=ax.transAxes)
+        logger.warning(f"Logo error: {str(e)}")
+        plt.text(0.5, 0.32, "@YourBrand", fontsize=80, color='#ffffff08', ha='center', rotation=25, transform=ax.transAxes)
 
-    # باقي المحتوى...
-    content = [
-        f"Reporting Period: {report_data['period']}",
-        "",
-        f"Total Trades: {report_data['total_trades']}",
-        f"Winning Trades: {report_data['winning_trades']}",
-        f"Losing Trades: {report_data['losing_trades']}",
-        f"Win Rate: {report_data['win_rate']:.1f}%",
-        f"Net Profit: {report_data['net_pips']:+,.1f} pips",
-        "",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        "© YourBrand Report"
-    ]
-
-    plt.text(0.1, 0.85, '\n'.join(content), fontsize=16, color=text_color,
-             fontfamily='sans-serif', verticalalignment='top', linespacing=1.8)
-
-    for x, y, text, size in [
-        (0.8, 0.75, f"Net Profit: {report_data['net_pips']:+,.1f} pips", 20),
-        (0.8, 0.7, f"Win Rate: {report_data['win_rate']:.1f}%", 20)
-    ]:
-        plt.text(x, y, text, fontsize=size, fontweight='bold', color=accent_color,
-                 fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
+    # --- تذييل التقرير ---
+    plt.text(0.5, 0.07, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
+             fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
+    plt.text(0.5, 0.03, "© YourBrand Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
 
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
     buf.seek(0)
     plt.close()
     return buf
+
 
 def send_telegram_photo(image_buffer, caption=""):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
