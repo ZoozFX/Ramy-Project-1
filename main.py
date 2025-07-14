@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request, UploadFile, File, Header, HTTPException
 from fastapi.responses import JSONResponse
 import os
@@ -161,34 +162,6 @@ def generate_report_image(report_data):
     ]:
         plt.text(x, y, text, fontsize=size, fontweight='bold', color=accent_color,
                  fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
-
-    # إضافة اللوجو من ملف محلي
-    try:
-        from PIL import Image
-        import os
-        
-        # تحديد مسار اللوجو (افترض أنه في نفس مجلد المشروع)
-        logo_path = os.path.join(os.path.dirname(__file__), 'logo.png')  # أو اسم ملف اللوجو الفعلي
-        
-        if os.path.exists(logo_path):
-            logo_img = Image.open(logo_path)
-            
-            # تغيير حجم اللوجو مع المحافظة على نسبة الأبعاد
-            logo_width = 900  # عرض اللوجو بالبكسل
-            logo_aspect_ratio = logo_img.width / logo_img.height
-            logo_height = int(logo_width / logo_aspect_ratio)
-            logo_img = logo_img.resize((logo_width, logo_height))
-            
-            # وضع اللوجو في الركن الأيمن السفلي مع هامش 20 بكسل
-            logo_position_x = 199
-            logo_position_y = 60  # هامش سفلي 20 بكسل
-            
-            # تحويل إحداثيات matplotlib إلى إحداثيات الشاشة
-            fig.figimage(logo_img, xo=logo_position_x, yo=logo_position_y, zorder=10)
-        else:
-            logger.warning("Logo file not found at: " + logo_path)
-    except Exception as e:
-        logger.warning(f"Could not add logo: {str(e)}")
 
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=150, bbox_inches='tight')
