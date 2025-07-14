@@ -125,7 +125,7 @@ def generate_report_image(report_data):
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
-    # تحديد عنوان التقرير بناءً على نوعه
+    # عنوان التقرير
     report_title = {
         'Daily': "Daily Trading Report",
         'Weekly': "Weekly Trading Report",
@@ -134,10 +134,20 @@ def generate_report_image(report_data):
 
     plt.text(0.5, 0.95, report_title, fontsize=24, fontweight='bold',
              color=accent_color, fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
-    plt.text(0.5, 0.5, "@kin99old", fontsize=120, color='#ffffff10',
-             fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
-             verticalalignment='center', rotation=30, transform=ax.transAxes)
 
+    # إضافة اللوجو بدلاً من العلامة المائية النصية
+    try:
+        logo = plt.imread('logo.png')  # تأكد من وجود الملف في نفس المجلد
+        logo_layer = plt.imshow(logo, aspect='auto', extent=[0.3, 0.7, 0.3, 0.7], alpha=0.1, zorder=0)
+        logo_layer.set_zorder(-1)  # إرسال اللوجو للخلفية
+    except Exception as e:
+        logger.warning(f"Could not load logo: {str(e)}")
+        # Fallback إلى العلامة المائية النصية إذا فشل تحميل الصورة
+        plt.text(0.5, 0.5, "@YourLogo", fontsize=120, color='#ffffff10',
+                 fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
+                 verticalalignment='center', rotation=30, transform=ax.transAxes)
+
+    # باقي المحتوى...
     content = [
         f"Reporting Period: {report_data['period']}",
         "",
@@ -149,7 +159,7 @@ def generate_report_image(report_data):
         "",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        "© Kin99old_copytrading Report"
+        "© YourBrand Report"
     ]
 
     plt.text(0.1, 0.85, '\n'.join(content), fontsize=16, color=text_color,
