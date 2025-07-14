@@ -174,7 +174,7 @@ def generate_report_image(report_data):
             logo_img = Image.open(logo_path)
             
             # تغيير حجم اللوجو مع المحافظة على نسبة الأبعاد
-            logo_width = 100  # عرض اللوجو بالبكسل
+            logo_width = 900  # عرض اللوجو بالبكسل
             logo_aspect_ratio = logo_img.width / logo_img.height
             logo_height = int(logo_width / logo_aspect_ratio)
             logo_img = logo_img.resize((logo_width, logo_height))
