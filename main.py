@@ -119,10 +119,10 @@ def generate_report_image(report_data):
     ax.axis('off')
 
     # إعداد الألوان
-    bg_color = '#111827'         # خلفية داكنة أكثر احترافية
-    text_color = '#F9FAFB'       # أبيض ناعم
-    accent_color = '#22D3EE'     # لون مميز للعنوانين
-    card_bg = '#1F2937'          # لون خلفية البطاقات
+    bg_color = '#111827'
+    text_color = '#F9FAFB'
+    accent_color = '#22D3EE'
+    card_bg = '#1F2937'
 
     fig = plt.gcf()
     fig.patch.set_facecolor(bg_color)
@@ -138,7 +138,7 @@ def generate_report_image(report_data):
     plt.text(0.5, 0.92, report_title, fontsize=26, fontweight='bold',
              color=accent_color, ha='center', fontfamily='sans-serif', transform=ax.transAxes)
 
-    # --- بطاقة الإحصائيات (كروت) ---
+    # --- بطاقات الإحصائيات ---
     stats = {
         "Total Trades": report_data['total_trades'],
         "Winning Trades": report_data['winning_trades'],
@@ -157,13 +157,22 @@ def generate_report_image(report_data):
         plt.text(0.88, y, str(value), fontsize=16, color=text_color, fontweight='bold',
                  transform=ax.transAxes, ha='right', va='center')
 
-    # --- شعار أو علامة مائية ---
+    # --- اللوجو في الزاوية (أسفل يسار مثلاً) ---
     try:
         logo = plt.imread('logo.png')
-        ax.imshow(logo, extent=[0.35, 0.65, 0.2, 0.45], aspect='auto', alpha=0.08, zorder=0)
+        ax.imshow(logo, extent=[0.05, 0.18, 0.03, 0.14], aspect='auto', alpha=1.0, zorder=2)
     except Exception as e:
-        logger.warning(f"Logo error: {str(e)}")
-        plt.text(0.5, 0.32, "@YourBrand", fontsize=80, color='#ffffff08', ha='center', rotation=25, transform=ax.transAxes)
+        logger.warning(f"Logo corner error: {str(e)}")
+        plt.text(0.06, 0.05, "@YourBrand", fontsize=14, color='#cccccc', transform=ax.transAxes)
+
+    # --- علامة مائية أكبر في المنتصف بشفافية ---
+    try:
+        logo = plt.imread('logo.png')
+        ax.imshow(logo, extent=[0.3, 0.7, 0.25, 0.55], aspect='auto', alpha=0.1, zorder=0)
+    except Exception as e:
+        logger.warning(f"Watermark fallback: {str(e)}")
+        plt.text(0.5, 0.4, "@YourBrand", fontsize=100, color='#ffffff10',
+                 ha='center', rotation=25, transform=ax.transAxes)
 
     # --- تذييل التقرير ---
     plt.text(0.5, 0.07, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
@@ -175,6 +184,7 @@ def generate_report_image(report_data):
     buf.seek(0)
     plt.close()
     return buf
+
 
 
 def send_telegram_photo(image_buffer, caption=""):
